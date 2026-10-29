@@ -1,0 +1,77 @@
+@page "/reparations"
+@inject IHttpClientFactory HttpClientFactory
+@inject ISessionStorageService SessionStorage
+@using Blazored.SessionStorage
+
+<PageTitle>Historique réparations</PageTitle>
+
+<h3>Historique des réparations</h3>
+
+@if (erreur != "")
+{
+    <p style="color:red;">@erreur</p>
+}
+else if (historique == null)
+{
+    <p>Chargement...</p>
+}
+else if (!historique.Any())
+{
+    <p>Aucune réparation enregistrée.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Ordinateur</th>
+                <th>Technicien</th>
+                <th>Type</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in historique)
+            {
+                <tr>
+                    <td>@r.NomOrdinateur</td>
+                    <td>@r.Technicien</td>
+                    <td>@r.TypeReparation</td>
+                    <td>@r.DateIntervention.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<HistoriqueItem>? historique;
+    string erreur = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await SessionStorage.GetItemAsync<string>("authToken");
+
+            var client = HttpClientFactory.CreateClient("GatewayClient");
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            historique = await client.GetFromJsonAsync<List<HistoriqueItem>>("api/reparations/historique");
+        }
+        catch (Exception ex)
+        {
+            erreur = "Erreur lors du chargement : " + ex.Message;
+        }
+    }
+
+    private class HistoriqueItem
+    {
+        public int OrdinateurId { get; set; }
+        public string NomOrdinateur { get; set; } = "";
+        public string Technicien { get; set; } = "";
+        public string TypeReparation { get; set; } = "";
+        public DateTime DateIntervention { get; set; }
+    }
+}

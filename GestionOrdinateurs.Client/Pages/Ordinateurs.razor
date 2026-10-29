@@ -1,0 +1,70 @@
+@page "/ordinateurs"
+@inject IHttpClientFactory HttpClientFactory
+@inject ISessionStorageService SessionStorage
+@using GestionOrdinateurs.Shared
+@using Blazored.SessionStorage
+
+<PageTitle>Ordinateurs</PageTitle>
+
+<h3>Liste des ordinateurs</h3>
+
+@if (erreur != "")
+{
+    <p style="color:red;">@erreur</p>
+}
+else if (liste == null)
+{
+    <p>Chargement...</p>
+}
+else if (!liste.Any())
+{
+    <p>Aucun ordinateur trouvé.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prix (€)</th>
+                <th>Devise</th>
+                <th>Vendu</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ordi in liste)
+            {
+                <tr>
+                    <td>@ordi.Nom</td>
+                    <td>@ordi.Prix</td>
+                    <td>EUR</td>
+                    <td>@(ordi.Vendu ? "Oui" : "Non")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Ordinateur>? liste;
+    string erreur = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var token = await SessionStorage.GetItemAsync<string>("authToken");
+
+            var client = HttpClientFactory.CreateClient("GatewayClient");
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var result = await client.GetFromJsonAsync<Dictionary<int, Ordinateur>>("api/ordinateurs");
+            liste = result?.Values.ToList() ?? new();
+        }
+        catch (Exception ex)
+        {
+            erreur = "Erreur lors du chargement : " + ex.Message;
+        }
+    }
+}

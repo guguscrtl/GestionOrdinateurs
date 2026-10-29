@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="GestionOrdinateurs.API/GestionOrdinateurs.API.csproj" />
+  <Project Path="GestionOrdinateurs.Shared/GestionOrdinateurs.Shared.csproj" />
+  <Project Path="GestionOrdinateurs.Tests/GestionOrdinateurs.Tests.csproj" />
+</Solution>

@@ -1,0 +1,82 @@
+@page "/login"
+@inject IHttpClientFactory HttpClientFactory
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Nav
+
+<PageTitle>Connexion</PageTitle>
+
+<h3>Connexion</h3>
+
+<div class="mb-3" style="max-width:300px;">
+    <label class="form-label">Login</label>
+    <input class="form-control" @bind="login" placeholder="ex: user1" />
+</div>
+
+@if (!string.IsNullOrEmpty(erreur))
+{
+    <p style="color:red;">@erreur</p>
+}
+
+<button class="btn btn-primary" @onclick="Connecter">Se connecter</button>
+
+@code {
+    private string login = "";
+    private string erreur = "";
+
+    private async Task Connecter()
+    {
+        erreur = "";
+
+        if (string.IsNullOrWhiteSpace(login))
+        {
+            erreur = "Veuillez entrer un login.";
+            return;
+        }
+
+        // on vérifie que le user existe dans l'api
+        var apiClient = HttpClientFactory.CreateClient("GestionOrdinateursApi");
+        var resp = await apiClient.GetAsync($"api/users/{login}");
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            erreur = $"L'utilisateur '{login}' n'existe pas.";
+            return;
+        }
+
+        var user = await resp.Content.ReadFromJsonAsync<UserInfo>();
+        if (user == null) return;
+
+        // on demande le token à l'api d'auth
+        var authClient = HttpClientFactory.CreateClient("AuthentificationApi");
+        // 0 = Admin, 1 = Gestionnaire (correspond à l'enum RoleEnum)
+        var roleName = user.Role == 0 ? "Admin" : "Gestionnaire";
+        var body = new { Login = user.Login, Role = roleName };
+        var tokenResp = await authClient.PostAsJsonAsync("api/authentication/login", body);
+
+        if (!tokenResp.IsSuccessStatusCode)
+        {
+            erreur = "Erreur lors de la génération du token.";
+            return;
+        }
+
+        var result = await tokenResp.Content.ReadFromJsonAsync<TokenResult>();
+        if (result == null) return;
+
+        // sauvegarde du token en session
+        await SessionStorage.SetItemAsync("authToken", result.Token);
+
+        Nav.NavigateTo("/");
+    }
+
+    private class UserInfo
+    {
+        public int Id { get; set; }
+        public string Login { get; set; } = "";
+        public int Role { get; set; }
+    }
+
+    private class TokenResult
+    {
+        public string Token { get; set; } = "";
+    }
+}
