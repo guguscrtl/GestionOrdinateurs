@@ -59,5 +59,34 @@ jobs:
 
       - name: Push AuthentificationApi
         run: docker push ${{ env.DOCKER_REGISTRY }}/authentificationapi:latest
-		
-	  # .... Les autres projets à pousser sous docker (à vous de reflechir sur ceux à poursser)
+    
+      #################################################
+      # GestionOrdinateurs.API
+      #################################################
+
+      - name: Build GestionOrdinateurs.API
+        run: docker build -t ${{ env.DOCKER_REGISTRY }}/gestionordinateurs.api:latest -f GestionOrdinateurs.API/Dockerfile .
+
+      - name: Push GestionOrdinateurs.API
+        run: docker push ${{ env.DOCKER_REGISTRY }}/gestionordinateurs.api:latest
+    
+      #################################################
+      # GestionOrdinateurs.Client
+      #################################################
+
+      - name: Build GestionOrdinateurs.Client
+        run: docker build -t ${{ env.DOCKER_REGISTRY }}/gestionordinateurs.client:latest -f GestionOrdinateurs.Client/Dockerfile .
+
+      - name: Push GestionOrdinateurs.Client
+        run: docker push ${{ env.DOCKER_REGISTRY }}/gestionordinateurs.client:latest
+
+        
+      #################################################
+      # GestionOrdinateurs.Gateway
+      #################################################
+
+      - name: Build GestionOrdinateurs.Gateway
+        run: docker build -t ${{ env.DOCKER_REGISTRY }}/gestionordinateurs.gateway:latest -f GestionOrdinateurs.Gateway/Dockerfile .
+
+      - name: Push GestionOrdinateurs.Gateway
+        run: docker push ${{ env.DOCKER_REGISTRY }}/gestionordinateurs.gateway:latest
