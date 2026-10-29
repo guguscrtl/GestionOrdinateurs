@@ -16,15 +16,28 @@ COPY ./GestionOrdinateurs.Shared/ ./GestionOrdinateurs.Shared/
 RUN dotnet publish ./GestionOrdinateurs.Client -c Release -o out
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/out ./
+FROM niginix:alpine
 
-# Set environment variables if needed (e.g., ASPNETCORE_ENVIRONMENT)
-ENV ASPNETCORE_ENVIRONMENT=Development
+COPY ./GestionOrdinateurs.Client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 
 # Expose port 5011
 EXPOSE 5011
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
-# Define the entry point
-ENTRYPOINT ["dotnet", "GestionOrdinateurs.Client.dll"]
+# # Define the entry point
+# ENTRYPOINT ["dotnet", "GestionOrdinateurs.Client.dll"]
+
+# # Build runtime image
+# FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# WORKDIR /app
+# COPY --from=build /app/out ./
+
+# # Set environment variables if needed (e.g., ASPNETCORE_ENVIRONMENT)
+# ENV ASPNETCORE_ENVIRONMENT=Development
+
+# # Expose port 5011
+# EXPOSE 5011
+
+# # Define the entry point
+# ENTRYPOINT ["dotnet", "GestionOrdinateurs.Client.dll"]
